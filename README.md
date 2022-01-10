@@ -1,1 +1,1 @@
-# RBF_from_scratch
+# RBF_Neural_Network_from_scratch
