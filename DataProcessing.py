@@ -110,5 +110,6 @@ def cross_validation_split(dataset, labels, n_folds):
 
     return dataset_split, labels_split
 
+
 if __name__ == '__main__':
     X, y = processing_data('SPY', '2000-01-01', '2021-01-01', '1d')

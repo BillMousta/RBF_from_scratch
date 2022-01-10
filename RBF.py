@@ -8,6 +8,7 @@ class RBF(object):
         self.tol = tol
         self.weights = []
         self.gamma = 0
+        self.l = 0
 
 
     """
@@ -28,26 +29,6 @@ class RBF(object):
         else:
             self.pseudo_inverse(X, y, k)
 
-        """
-        create a vector of kernel with size k
-        Φ_j(x_i) = rbf(x_i, μ_j) i = 1,2,...,N, j = 1,...,k \
-        where μ_j the centers from K means
-        hidden layer
-        """
-        # print(self.centers)
-        # F = np.zeros([len(X),k])
-        # # Φ matrix
-        # for i in range(len(X)):
-        #     for j in range(k):
-        #         F[i][j] = rbf(X[i], self.centers[j], self.gamma)
-        #
-        # # print(F)
-        # F_pseudoinverse = np.linalg.pinv(F)
-        # self.weights = F_pseudoinverse*y
-        # self.weights = self.weights.transpose()
-
-        # Get the weights according with RLS algorithm
-        # self.RLS(X, y, k, l)
 
     """
     Implementation algorithm of RLS algorithm 
@@ -58,8 +39,8 @@ class RBF(object):
         # self.weights = np.zeros(k)
         self.weights = np.random.randn(k)
         self.bias = np.random.randn(1)
-        P = l*np.identity(k)
-        avg_loss = 0
+        P = self.l*np.identity(k)
+        self.l = l
 
         for i, sample in enumerate(X):
             """
@@ -69,7 +50,7 @@ class RBF(object):
             hidden layer
             """
             phi = np.array([rbf(sample, c, self.gamma) for c in self.centers])
-            F = np.dot(phi, self.weights) + self.bias
+            # F = np.dot(phi, self.weights) + self.bias
 
             # loss = (y[i] - F).flatten() ** 2
             # avg_loss += loss
@@ -95,6 +76,7 @@ class RBF(object):
     w = G+ * y where y is the training labels
     """
     def pseudo_inverse(self, X, y, k):
+        self.l = 0
         G = np.zeros([len(X), k])
         # G matrix
         for i in range(len(X)):
@@ -105,6 +87,7 @@ class RBF(object):
         # Pseudo inverse
         G_plus = np.linalg.pinv(G)
         self.weights =G_plus * y
+
         self.weights = self.weights.transpose()
 
     """
@@ -113,41 +96,33 @@ class RBF(object):
     """
     def predict(self, X, method):
         # print(self.weights)
+        self.F_mat = []
         y_pred = []
         if method == 'RLS':
             for i, sample in enumerate(X):
                 phi = np.array([rbf(sample, c, self.gamma) for c in self.centers])
                 F = np.dot(self.weights, phi)
+                self.F_mat.append(F)
                 y_pred.append(np.sign(F))
         else:
             for i, sample in enumerate(X):
                 phi = np.array([rbf(sample, c, self.gamma) for c in self.centers])
                 F = np.dot(self.weights[i], phi)
+                self.F_mat.append(F)
                 y_pred.append(np.sign(F))
 
         return y_pred
 
     """
-    F = dot(w,phi) + bias
-    sign function -1, 1
+    Return Mean Square Error
     """
-    # def predict(self, X, actual):
-    #     # print(self.weights)
-    #     y_pred = []
-    #     avg_loss = 0
-    #     for i, sample in enumerate(X):
-    #         phi = np.array([rbf(sample, c, self.gamma) for c in self.centers])
-    #         F = np.dot(self.weights, phi) + self.bias
-    #         # MSE error
-    #         avg_loss += (actual[i] - F).flatten() ** 2
-    #         y_pred.append(np.sign(F))
-    #     test_loss = avg_loss/len(X)
-    #     y_pred = np.array(y_pred)
-    #     y_pred = y_pred.reshape(y_pred.shape[0])
-    #     correct = self.accuracy_metric(actual, y_pred)
-    #     print(f"Test Error: \n Accuracy: {(correct):>0.1f}%, Avg loss: {float(test_loss):>8f} \n")
-    #
-    #     return y_pred, correct/100, test_loss
+    def MSE(self, d, N):
+        error = 0
+        for i in range(N):
+            error = error + 0.5*(d[i] - self.F_mat[i])**2 + 0.5*np.linalg.norm(self.weights)
+
+        return error/N
+
 
     """
     Return the max distance of all centers
@@ -169,7 +144,6 @@ class RBF(object):
             if actual[i] == predicted[i]:
                 correct += 1
         return correct / float(len(actual)) * 100.0
-
 
 
 def rbf(x, y, gamma):

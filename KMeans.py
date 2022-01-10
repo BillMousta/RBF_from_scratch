@@ -2,6 +2,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import sklearn
+import seaborn as sns
 
 class KMeans(object):
     def __init__(self, iterations, tol):
@@ -40,7 +41,6 @@ class KMeans(object):
 
             for feature in data:
                 # get the k  Euclidean distances for each center
-                # distances = [np.linalg.norm(feature - centers[c])**2 for c in range(len(centers))]
                 distances = [np.linalg.norm(feature - c)**2 for c in centers]
                 # get the min distance from center
                 min_dist = distances.index(min(distances))
@@ -69,7 +69,7 @@ class KMeans(object):
     """
     def stop_iteration(self, prev, cur):
         for i in range(cur.shape[0]):
-            if np.sum((cur[i] - prev[i]) / prev[i] * 100.0) > self.tol:
+            if np.sum((cur[i] - prev[i]) / prev[i]) > self.tol:
                 return False
         return True
 
@@ -87,24 +87,34 @@ if __name__ == '__main__':
                     [3,3],
                     [4.5,20],
                     [0, 0],
-                    [20,20]
+                    [20,20],
+                    [19,18],
+                    [3,17],
+                    [12,15],
+                    [1,16]
                     ])
 
-    k = KMeans(100, 0.00001)
-    centers, data = k.algorithm(arr, 2)
+    k = KMeans(100, 0.0001)
+    centers, data = k.algorithm(arr, 3)
     X = arr[:, 0]
     Y = arr[:, 1]
     # plt.plot(X, Y, 'o', label= 'class 1', color='b')
 
     print(centers)
     print(data)
+    sns.set_theme()
     plt.figure()
+    plt.title('3 Means Clustering')
+    plt.ylabel('y-axis')
+    plt.xlabel('x-axis')
     plt.plot(data[0][:, 0], data[0][:, 1], 'o', label= 'class 1', color='blue')
-    plt.plot(data[1][:, 0], data[1][:, 1], 'o', label='class 2', color='red')
-    # plt.plot(data[2][:, 0], data[2][:, 1], 'o', label='class 3', color='black')
     plt.plot(centers[:, 0], centers[:, 1], 'x', color='blue')
+
+    plt.plot(data[1][:, 0], data[1][:, 1], 'o', label='class 2', color='red')
     plt.plot(centers[:, 0], centers[:, 1], 'x', color='red')
-    # plt.plot(centers[:, 0], centers[:, 1], 'x', color='black')
+
+    plt.plot(data[2][:, 0], data[2][:, 1], 'o', label='class 3', color='black')
+    plt.plot(centers[:, 0], centers[:, 1], 'x', color='black')
 
     plt.legend()
     plt.show()
